@@ -1,0 +1,36 @@
+<section id="action-liste" hx-get="/dashboard/liste"
+         hx-trigger="dashboard-maj from:body" hx-swap="outerHTML">
+  <div class="liste-head">
+    <h2>{% if filtre %}Filtre : {{ ETAT_LABELS.get(filtre, filtre) }}{% else %}À traiter{% endif %}</h2>
+    {% if filtre %}
+    <button class="lien" hx-get="/dashboard/liste" hx-target="#action-liste" hx-swap="outerHTML">voir tout</button>
+    {% endif %}
+  </div>
+  <ul class="daction-liste">
+    {% for item in produits %}
+    {% set p = item.p %}
+    <li class="daction">
+      <a class="daction-vig" href="/produits/{{ p.id }}">
+        {% if p.photos %}<img src="/{{ p.photos[0].chemin_lbc or p.photos[0].chemin_original }}" alt="" loading="lazy">
+        {% else %}📦{% endif %}
+      </a>
+      <div class="daction-info">
+        <a href="/produits/{{ p.id }}" class="daction-titre">{{ p.titre or "En cours d'analyse…" }}</a>
+        <div class="daction-meta">
+          <span class="badge etat-{{ p.etat }}">{{ ETAT_LABELS[p.etat] }}</span>
+          {% if p.prix_choisi is not none %}<span class="daction-prix">{{ p.prix_choisi }} €</span>
+          {% elif p.prix_min_estime is not none %}<span class="daction-prix">{{ p.prix_min_estime }}–{{ p.prix_max_estime }} €</span>{% endif %}
+          {% if item.jours is not none %}
+          <span class="anciennete {% if item.vieux %}vieux{% endif %}">en ligne depuis {{ item.jours }} j{% if item.vieux %} · prix à revoir ?{% endif %}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="daction-btns" id="actions-{{ p.id }}">
+        {% include 'dashboard_actions.html' %}
+      </div>
+    </li>
+    {% else %}
+    <li class="daction vide" style="justify-content:center;color:var(--muted);">Rien à traiter ici 🎉</li>
+    {% endfor %}
+  </ul>
+</section>

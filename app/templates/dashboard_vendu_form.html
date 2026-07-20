@@ -1,0 +1,9 @@
+{# Mini-formulaire « marquer vendu », remplace les boutons d'action de la ligne. #}
+<form class="vendu-form" hx-post="/dashboard/{{ p.id }}/vendu" hx-swap="none">
+  <input type="number" name="prix" inputmode="numeric" min="0" step="1"
+         value="{{ p.prix_choisi if p.prix_choisi is not none else '' }}"
+         placeholder="Prix vendu €" autofocus>
+  <button type="submit" class="btn-mini primary">OK</button>
+  <button type="button" class="btn-mini ghost"
+          hx-get="/dashboard/{{ p.id }}/actions" hx-target="#actions-{{ p.id }}" hx-swap="innerHTML">✕</button>
+</form>

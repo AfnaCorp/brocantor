@@ -1,0 +1,16 @@
+{# Boutons d'action rapide d'une ligne, selon l'état. Contexte : p. #}
+{% if p.etat == 'prete' %}
+  <a class="btn-mini primary" href="/produits/{{ p.id }}/publier">Publier</a>
+{% elif p.etat == 'publiee' %}
+  <button class="btn-mini primary" hx-get="/dashboard/{{ p.id }}/vendu-form"
+          hx-target="#actions-{{ p.id }}" hx-swap="innerHTML">Vendu !</button>
+  <button class="btn-mini danger" hx-post="/dashboard/{{ p.id }}/retirer"
+          hx-confirm="Retirer cette annonce ?" hx-swap="none">Retirer</button>
+{% elif p.etat == 'erreur' %}
+  <button class="btn-mini" hx-post="/api/produits/{{ p.id }}/relancer" hx-swap="none"
+          hx-on::after-request="if(event.detail.successful){htmx.trigger('body','dashboard-maj')}else{alert('Relance indisponible (bientôt)')}">
+    Relancer</button>
+{% elif p.etat == 'a_valider' %}
+  <a class="btn-mini primary" href="/produits/{{ p.id }}">Valider</a>
+{% endif %}
+<a class="btn-mini ghost" href="/produits/{{ p.id }}">Détail</a>

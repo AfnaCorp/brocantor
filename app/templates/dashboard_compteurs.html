@@ -1,0 +1,22 @@
+<section id="compteurs" hx-get="/dashboard/compteurs"
+         hx-trigger="every 60s, dashboard-maj from:body" hx-swap="outerHTML">
+  <div class="tuiles">
+    {% for etat, label in etats_tuiles %}
+    <button class="tuile etat-{{ etat }} {% if compteurs[etat] > 0 and etat in ('a_valider','erreur') %}saillant{% endif %}"
+            hx-get="/dashboard/liste?etat={{ etat }}" hx-target="#action-liste" hx-swap="outerHTML">
+      <span class="tuile-n">{{ compteurs[etat] }}</span>
+      <span class="tuile-l">{{ label }}</span>
+    </button>
+    {% endfor %}
+  </div>
+  <div class="tuiles-argent">
+    <div class="targent">
+      <span class="targent-n">{{ sommes.valeur_estimee }} €</span>
+      <span class="targent-l">Valeur estimée en vente</span>
+    </div>
+    <div class="targent vendu">
+      <span class="targent-n">{{ sommes.total_vendu }} €</span>
+      <span class="targent-l">Total vendu</span>
+    </div>
+  </div>
+</section>

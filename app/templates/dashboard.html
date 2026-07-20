@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+/* Dashboard (T05) — styles propres, hors style.css (territoire T01). */
+.tuiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tuile {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 14px 8px; border-radius: 14px; background: var(--surface);
+  border: 1px solid var(--border); color: var(--text); min-height: 64px;
+}
+.tuile-n { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.tuile-l { font-size: .72rem; color: var(--muted); text-align: center; }
+.tuile.saillant { border-color: var(--warn); box-shadow: 0 0 0 2px rgba(210,153,34,.25); }
+.tuile.etat-erreur.saillant { border-color: var(--err); box-shadow: 0 0 0 2px rgba(248,81,73,.25); }
+.tuiles-argent { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.targent { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+.targent-n { display: block; font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+.targent.vendu .targent-n { color: var(--ok); }
+.targent-l { font-size: .78rem; color: var(--muted); }
+
+.liste-head { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 8px; }
+.liste-head h2 { font-size: 1.05rem; margin: 0; }
+.lien { background: none; border: none; color: var(--accent); font-weight: 600; min-height: 40px; padding: 0; }
+.daction-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.daction { display: flex; gap: 10px; align-items: center; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px; padding: 8px; }
+.daction-vig { flex: 0 0 auto; width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
+  background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+.daction-vig img { width: 100%; height: 100%; object-fit: cover; }
+.daction-info { flex: 1; min-width: 0; }
+.daction-titre { display: block; font-weight: 600; text-decoration: none; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.daction-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.daction-prix { color: var(--accent); font-weight: 700; font-size: .9rem; }
+.anciennete { font-size: .72rem; color: var(--muted); }
+.anciennete.vieux { color: var(--warn); }
+.daction-btns { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
+.btn-mini { min-height: 40px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); font-weight: 600; font-size: .85rem;
+  text-decoration: none; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
+.btn-mini.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn-mini.danger { color: var(--err); border-color: var(--err); background: transparent; }
+.btn-mini.ghost { background: transparent; color: var(--muted); }
+.vendu-form { display: flex; gap: 6px; align-items: center; }
+.vendu-form input { width: 90px; min-height: 40px; }
+.msg-err { color: #ffb3ad; font-size: .8rem; }
+</style>
+
+<header class="page-head"><h1>Dashboard</h1></header>
+
+{% include 'dashboard_compteurs.html' %}
+{% include 'dashboard_liste.html' %}
+{% endblock %}
