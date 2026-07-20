@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+.file-item { display: flex; align-items: center; gap: 10px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px; padding: 10px; margin-bottom: 8px; }
+.file-vig { width: 52px; height: 52px; border-radius: 10px; overflow: hidden; background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center; flex: 0 0 auto; font-size: 1.3rem; }
+.file-vig img { width: 100%; height: 100%; object-fit: cover; }
+.file-info { flex: 1; min-width: 0; }
+.file-titre { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-prix { color: var(--accent); font-weight: 700; font-size: .9rem; }
+</style>
+
+<header class="page-head"><h1>File de publication</h1></header>
+
+{% if not pretes %}
+<p class="placeholder">Aucune fiche prête à publier. Validez des fiches d'abord.</p>
+{% else %}
+<p style="color:var(--muted);margin:0 0 14px;">{{ pretes|length }} fiche(s) prête(s), plus ancienne d'abord.</p>
+<a class="btn btn-primary" style="width:100%;margin-bottom:16px;"
+   href="/produits/{{ pretes[0].id }}/publier">▶ Commencer</a>
+
+{% for p in pretes %}
+<div class="file-item">
+  <a class="file-vig" href="/produits/{{ p.id }}/publier">
+    {% if p.photos %}<img src="/{{ p.photos[0].chemin_lbc or p.photos[0].chemin_original }}" alt="">{% else %}📦{% endif %}
+  </a>
+  <div class="file-info">
+    <div class="file-titre">{{ p.titre or 'Fiche sans titre' }}</div>
+    <div class="file-prix">{% if p.prix_choisi is not none %}{{ p.prix_choisi }} €{% else %}prix ?{% endif %}</div>
+  </div>
+  <a class="btn" href="/produits/{{ p.id }}/publier">Publier</a>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

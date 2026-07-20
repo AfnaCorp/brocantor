@@ -9,7 +9,7 @@ Chaque ticket a son prompt agent dans `tickets/T0X-*.md`. L'ordre d'exécution e
 | T03 | Worker d'analyse IA : file async, appel Claude vision, images LBC | T01, T02 | T06 | 1–1,5 j | Fait |
 | T04 | Fiches produits : liste, détail, édition, validation | T01 | T02, T05 | 1 j | Fait |
 | T05 | Dashboard de suivi : compteurs, filtres, actions d'état | T01 | T02, T04 | ½ j | Fait |
-| T06 | Pack de publication : page publier, boutons copier, photos prêtes | T01, T04 | T03 | ½ j | À faire |
+| T06 | Pack de publication : page publier, boutons copier, photos prêtes | T01, T04 | T03 | ½ j | Fait |
 | T07 | Userscript remplisseur : API next/publiee + script Tampermonkey | T06 | T08 | ½–1 j | À faire |
 | T08 | Déploiement Mac mini : launchd, Tailscale HTTPS, sauvegarde | T01 | T07 | ½ j | À faire |
 
@@ -24,6 +24,8 @@ Chaque ticket a son prompt agent dans `tickets/T0X-*.md`. L'ordre d'exécution e
 - **T04 Fait** : fiches produits. Liste grille + puces de filtre (Tous/À valider/Prêtes/Publiées/Vendues/Erreur), a_valider en premier. Détail = preview d'annonce (carrousel LBC, titre, bloc prix fourchette+confiance+prix choisi éditable+lien comparables LBC, description, catégorie). Édition inline HTMX par bloc (crayon → champ → Enregistrer/Annuler, sauvegarde immédiate). Contexte IA repliable (hypothèses/questions/note). Validation : bouton visible en `a_valider`, exige titre+description+catégorie+prix → `prete` (event journalisé) ; édition d'une fiche `prete` la laisse `prete`. Abandonner (confirmation → `abandonnee`), notes libres, historique repliable. **Chemin critique T01→T04 = POC complet vérifié** : dépôt → IA (fake) → a_valider → validation → prete, de bout en bout. **À vérifier par Wassim (mobile réel)** : fluidité tactile ≥48px, absence de zoom involontaire, ouverture du lien comparables.
 
 - **T05 Fait** : dashboard. Bandeau 6 tuiles compteurs (cliquables → liste filtrée HTMX ; À valider/Erreur saillantes si >0), 2 tuiles argent (valeur estimée = Σ prix_choisi prête+publiée ; total vendu = Σ prix_vente_reel, en SQL). Liste d'action avec actions rapides par état : prête→Publier, publiée→« Vendu ! » (mini-form prix pré-rempli → `vendue`+`vendu_le`+`prix_vente_reel`) & Retirer, erreur→Relancer (POST T03), a_valider→Valider, tous→Détail. Ancienneté « en ligne depuis X j » + badge « prix à revoir ? » au-delà de 10 j. Auto-refresh 60s + rafraîchissement immédiat via HX-Trigger `dashboard-maj`. Vérifié (TestClient) : compteurs/sommes exacts (274 € / 110 €), vendu à 25 € → total 135 € + event + vendu_le, badge sur produit vieilli 15 j, retirer → abandonnee.
+
+- **T06 Fait** : pack de publication. Page `/produits/{id}/publier` (prête uniquement, sinon redirect détail), blocs ordre LBC ①Titre ②Catégorie ③Description ④Prix (boutons Copier clipboard + feedback « Copié ✓ » + marquage bloc copié) ⑤Photos (vignettes LBC + zip à la volée en mémoire, noms `1.jpg…`, download individuel, note mobile). Gros bouton lien dépôt LBC. Clôture : URL optionnelle + « Marquer publiée » → `publiee`+url, **chaînage vers la fiche prête suivante** (sinon dashboard). File `/publier` (prêtes, plus ancienne d'abord, « Commencer »). Router sans préfixe (sert `/publier` + `/produits/{id}/publier`), `main.py` inchangé. Vérifié (TestClient) : ordre des blocs, zip `['1.jpg','2.jpg']`, non-prête→303, marquer publiée→publiee+url+event+redirect suivante, file OK. **Note** : lien dashboard→`/publier` non ajouté (territoire T05 déjà commité) — accès direct `/publier` fonctionnel.
 
 ## Chemin critique POC
 
