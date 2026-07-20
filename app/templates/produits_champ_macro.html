@@ -1,0 +1,52 @@
+{# Macro d'un champ éditable inline (T04), partagée par le détail et l'endpoint HTMX. #}
+{% macro render_champ(p, champ, meta, valeur, mode, categories, suggestion_prix) %}
+{% if mode == 'edit' %}
+<form id="bloc-{{ champ }}" class="champ champ-edit"
+      hx-post="/produits/{{ p.id }}/save/{{ champ }}"
+      hx-target="#bloc-{{ champ }}" hx-swap="outerHTML">
+  <label class="champ-lbl">{{ meta.label }}</label>
+  {% if meta.type == 'textarea' %}
+    <textarea name="valeur" rows="5" autofocus>{{ valeur or '' }}</textarea>
+  {% elif meta.type == 'select' %}
+    <select name="valeur" autofocus>
+      {% for c in categories %}
+      <option value="{{ c }}" {% if c == valeur %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  {% elif meta.type == 'number' %}
+    <input type="number" inputmode="numeric" name="valeur" min="0" step="1"
+           value="{{ valeur if valeur is not none else (suggestion_prix or '') }}" autofocus>
+  {% else %}
+    <input type="text" name="valeur" maxlength="{{ 50 if champ == 'titre' else 200 }}"
+           value="{{ valeur or '' }}" autofocus>
+  {% endif %}
+  <div class="champ-actions">
+    <button type="submit" class="btn btn-primary">Enregistrer</button>
+    <button type="button" class="btn"
+            hx-get="/produits/{{ p.id }}/show/{{ champ }}"
+            hx-target="#bloc-{{ champ }}" hx-swap="outerHTML">Annuler</button>
+  </div>
+</form>
+{% else %}
+<div id="bloc-{{ champ }}" class="champ champ-{{ champ }}">
+  <div class="champ-corps">
+    <span class="champ-lbl">{{ meta.label }}</span>
+    <div class="champ-val">
+      {% if champ == 'prix_choisi' %}
+        {% if valeur is not none %}<strong class="prix">{{ valeur }} €</strong>
+        {% else %}<span class="vide">— non fixé{% if suggestion_prix %} (suggéré {{ suggestion_prix }} €){% endif %}</span>{% endif %}
+      {% elif champ == 'titre' %}
+        {% if valeur %}<strong>{{ valeur }}</strong>{% else %}<span class="vide">En cours d'analyse…</span>{% endif %}
+      {% elif champ in ('description', 'notes') %}
+        {% if valeur %}<p class="multi">{{ valeur }}</p>{% else %}<span class="vide">—</span>{% endif %}
+      {% else %}
+        {% if valeur %}{{ valeur }}{% else %}<span class="vide">—</span>{% endif %}
+      {% endif %}
+    </div>
+  </div>
+  <button type="button" class="crayon" aria-label="Modifier {{ meta.label }}"
+          hx-get="/produits/{{ p.id }}/edit/{{ champ }}"
+          hx-target="#bloc-{{ champ }}" hx-swap="outerHTML">✏️</button>
+</div>
+{% endif %}
+{% endmacro %}

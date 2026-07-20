@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% from 'produits_champ_macro.html' import render_champ %}
+{% block content %}
+<link rel="stylesheet" href="/static/produits.css">
+
+<div class="detail-top">
+  <a href="/produits" class="retour">‹ Fiches</a>
+  <span class="badge etat-{{ p.etat }}">{{ ETAT_LABELS[p.etat] }}</span>
+</div>
+
+{# --- Carrousel photos (versions LBC si dispo, sinon originales) --- #}
+{% if p.photos %}
+<div class="carrousel">
+  {% for ph in p.photos %}
+  <img src="/{{ ph.chemin_lbc or ph.chemin_original }}" alt="photo {{ loop.index }}" loading="lazy">
+  {% endfor %}
+</div>
+{% else %}
+<div class="carrousel vide-photos">📦 Aucune photo</div>
+{% endif %}
+
+{# --- Aperçu d'annonce, ordre Leboncoin --- #}
+<section class="preview">
+  {{ render_champ(p, 'titre', champs_meta['titre'], p.titre, 'show', categories, suggestion_prix) }}
+
+  {# Bloc prix : fourchette + confiance (lecture seule) + prix choisi (éditable) --- #}
+  <div class="bloc-prix">
+    <div class="fourchette">
+      {% if p.prix_min_estime is not none %}
+        Estimation IA : <strong>{{ p.prix_min_estime }}–{{ p.prix_max_estime }} €</strong>
+        {% if p.confiance_estimation %}<span class="confiance conf-{{ p.confiance_estimation }}">confiance {{ p.confiance_estimation }}</span>{% endif %}
+      {% else %}
+        <span class="vide">Pas encore d'estimation.</span>
+      {% endif %}
+    </div>
+    {{ render_champ(p, 'prix_choisi', champs_meta['prix_choisi'], p.prix_choisi, 'show', categories, suggestion_prix) }}
+    <a class="btn btn-compar" href="{{ lien_comparables }}" target="_blank" rel="noopener">
+      🔍 Voir les annonces comparables
+    </a>
+  </div>
+
+  {{ render_champ(p, 'description', champs_meta['description'], p.description, 'show', categories, suggestion_prix) }}
+  {{ render_champ(p, 'categorie_lbc', champs_meta['categorie_lbc'], p.categorie_lbc, 'show', categories, suggestion_prix) }}
+</section>
+
+{# --- Contexte IA (repliable) --- #}
+<details class="contexte-ia">
+  <summary>Contexte IA & note d'origine</summary>
+  <div class="contexte-corps">
+    {% if p.hypotheses_ia %}
+    <div class="ctx-bloc"><h4>L'IA a supposé…</h4>
+      <ul>{% for h in p.hypotheses_ia %}<li>{{ h }}</li>{% endfor %}</ul></div>
+    {% endif %}
+    {% if p.questions_ia %}
+    <div class="ctx-bloc"><h4>Infos qui amélioreraient la fiche</h4>
+      <ul>{% for q in p.questions_ia %}<li>{{ q }}</li>{% endfor %}</ul></div>
+    {% endif %}
+    <div class="ctx-bloc"><h4>Note d'origine (vendeur)</h4>
+      <p class="multi">{{ p.note_utilisateur or '—' }}</p></div>
+    {% if p.erreur_derniere %}
+    <div class="ctx-bloc err"><h4>Dernière erreur</h4><p>{{ p.erreur_derniere }}</p></div>
+    {% endif %}
+  </div>
+</details>
+
+{# --- Actions --- #}
+<div class="actions">
+  {% if p.etat == 'a_valider' %}
+  <button class="btn btn-primary btn-valider"
+          hx-post="/produits/{{ p.id }}/valider"
+          hx-target="#msg-action" hx-swap="innerHTML">✓ Valider la fiche</button>
+  {% elif p.etat == 'prete' %}
+  <a class="btn btn-primary" href="/produits/{{ p.id }}/publier">📤 Publier</a>
+  {% endif %}
+
+  {% if p.etat not in ('vendue', 'abandonnee') %}
+  <button class="btn btn-danger"
+          hx-post="/produits/{{ p.id }}/abandonner"
+          hx-confirm="Abandonner ce produit ?"
+          hx-target="#msg-action" hx-swap="innerHTML">Abandonner</button>
+  {% endif %}
+</div>
+<div id="msg-action" class="msg-action"></div>
+
+{# --- Notes libres (toujours éditable) --- #}
+<section class="notes-libres">
+  {{ render_champ(p, 'notes', champs_meta['notes'], p.notes, 'show', categories, suggestion_prix) }}
+</section>
+
+{# --- Historique --- #}
+<details class="historique">
+  <summary>Historique ({{ evenements|length }})</summary>
+  <ul class="evenements">
+    {% for e in evenements %}
+    <li><span class="ev-date">{{ e.horodatage[:19]|replace('T',' ') }}</span>
+      {{ ETAT_LABELS.get(e.ancien_etat, e.ancien_etat or '—') }} → {{ ETAT_LABELS.get(e.nouvel_etat, e.nouvel_etat) }}
+      {% if e.commentaire %}<em>· {{ e.commentaire }}</em>{% endif %}</li>
+    {% else %}
+    <li class="vide">Aucun événement.</li>
+    {% endfor %}
+  </ul>
+</details>
+{% endblock %}

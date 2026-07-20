@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="/static/produits.css">
+<header class="page-head"><h1>Fiches</h1></header>
+
+<div class="puces">
+  {% for cle, label, etat in filtres %}
+  <a class="puce {% if filtre_actif == cle %}actif{% endif %}"
+     href="{% if etat %}/produits?etat={{ etat }}{% else %}/produits{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if not produits %}
+<p class="vide-liste">Aucun produit dans ce filtre.</p>
+{% else %}
+<div class="grille">
+  {% for p in produits %}
+  <a class="carte" href="/produits/{{ p.id }}">
+    <div class="carte-img">
+      {% if p.photos %}
+        {% set ph = p.photos[0] %}
+        <img src="/{{ ph.chemin_lbc or ph.chemin_original }}" alt="{{ p.titre or 'produit' }}" loading="lazy">
+      {% else %}
+        <div class="carte-noimg">📦</div>
+      {% endif %}
+      <span class="badge etat-{{ p.etat }}">{{ ETAT_LABELS[p.etat] }}</span>
+    </div>
+    <div class="carte-txt">
+      <div class="carte-titre">{{ p.titre or "En cours d'analyse…" }}</div>
+      <div class="carte-prix">
+        {% if p.prix_choisi is not none %}{{ p.prix_choisi }} €
+        {% elif p.prix_min_estime is not none %}{{ p.prix_min_estime }}–{{ p.prix_max_estime }} €
+        {% else %}<span class="vide">prix à estimer</span>{% endif %}
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
