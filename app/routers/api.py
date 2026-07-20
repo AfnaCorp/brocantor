@@ -11,6 +11,9 @@ Chaque ticket n'écrit QUE dans sa section.
 from __future__ import annotations
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
+
+from .. import models
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -22,7 +25,21 @@ def health():
 
 
 # --- # T03 : relance worker -------------------------------------------------
-# (ajouté par le ticket T03)
+
+
+@router.post("/produits/{produit_id}/relancer")
+def relancer(produit_id: str):
+    """Repasse un produit en état `erreur` vers `depose` (le worker le reprendra)."""
+    produit = models.get_produit(produit_id)
+    if produit is None:
+        return JSONResponse({"ok": False, "erreur": "Produit introuvable."}, status_code=404)
+    if produit.etat != models.ETAT_ERREUR:
+        return JSONResponse(
+            {"ok": False, "erreur": f"Produit en état '{produit.etat}', pas 'erreur'."},
+            status_code=409,
+        )
+    models.changer_etat(produit_id, models.ETAT_DEPOSE, "relance manuelle depuis l'API")
+    return {"ok": True, "produit_id": produit_id, "etat": models.ETAT_DEPOSE}
 
 
 # --- # T07 : endpoints userscript -------------------------------------------

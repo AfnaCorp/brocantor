@@ -13,7 +13,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import db
+from . import db, worker  # T03 : worker d'analyse IA
 from .routers import api, dashboard, depot, produits, publication
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -25,10 +25,11 @@ async def lifespan(app: FastAPI):
     db.init_db()
 
     # --- # T03 : démarrage du worker d'analyse IA -------------------------
-    # (le ticket T03 démarre ici sa boucle asyncio et l'arrête au shutdown)
+    await worker.start()
 
     yield
-    # Arrêt propre (rien à nettoyer pour le socle).
+    # Arrêt propre.
+    await worker.stop()  # T03
 
 
 app = FastAPI(title="Brocantor", lifespan=lifespan)
