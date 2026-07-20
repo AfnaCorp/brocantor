@@ -112,4 +112,14 @@ async def publication_publiee(produit_id: str, request: Request):
 
 
 # --- # T08 : déploiement ----------------------------------------------------
-# (ajoutés par le ticket T08)
+
+
+@router.get("/sante")
+def sante():
+    """Santé de l'app (utilisé par install.sh et pratique depuis le téléphone)."""
+    from .. import db, worker
+
+    n = db.query_one("SELECT COUNT(*) AS n FROM produits")["n"]
+    task = getattr(worker, "_task", None)
+    actif = task is not None and not task.done()
+    return {"ok": True, "produits": n, "worker": "actif" if actif else "inactif"}

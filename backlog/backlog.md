@@ -11,7 +11,7 @@ Chaque ticket a son prompt agent dans `tickets/T0X-*.md`. L'ordre d'exécution e
 | T05 | Dashboard de suivi : compteurs, filtres, actions d'état | T01 | T02, T04 | ½ j | Fait |
 | T06 | Pack de publication : page publier, boutons copier, photos prêtes | T01, T04 | T03 | ½ j | Fait |
 | T07 | Userscript remplisseur : API next/publiee + script Tampermonkey | T06 | T08 | ½–1 j | Fait |
-| T08 | Déploiement Mac mini : launchd, Tailscale HTTPS, sauvegarde | T01 | T07 | ½ j | À faire |
+| T08 | Déploiement Mac mini : launchd, Tailscale HTTPS, sauvegarde | T01 | T07 | ½ j | Fait |
 
 ## Journal de nuit (2026-07-21)
 
@@ -28,6 +28,8 @@ Chaque ticket a son prompt agent dans `tickets/T0X-*.md`. L'ordre d'exécution e
 - **T06 Fait** : pack de publication. Page `/produits/{id}/publier` (prête uniquement, sinon redirect détail), blocs ordre LBC ①Titre ②Catégorie ③Description ④Prix (boutons Copier clipboard + feedback « Copié ✓ » + marquage bloc copié) ⑤Photos (vignettes LBC + zip à la volée en mémoire, noms `1.jpg…`, download individuel, note mobile). Gros bouton lien dépôt LBC. Clôture : URL optionnelle + « Marquer publiée » → `publiee`+url, **chaînage vers la fiche prête suivante** (sinon dashboard). File `/publier` (prêtes, plus ancienne d'abord, « Commencer »). Router sans préfixe (sert `/publier` + `/produits/{id}/publier`), `main.py` inchangé. Vérifié (TestClient) : ordre des blocs, zip `['1.jpg','2.jpg']`, non-prête→303, marquer publiée→publiee+url+event+redirect suivante, file OK. **Note** : lien dashboard→`/publier` non ajouté (territoire T05 déjà commité) — accès direct `/publier` fonctionnel.
 
 - **T07 Fait** : userscript remplisseur. API (section `# T07` de `api.py`) : `GET /api/publication/next` (fiche prête + `restantes` + `photos_zip_url`, 204 si vide), `POST /api/publication/{id}/publiee` (409 si non prête), CORS **ciblé** (origine `https://www.leboncoin.fr` seulement, via helper `_cors` sur ces routes + preflight OPTIONS, PAS de middleware global → `main.py` inchangé). `userscript/brocantor.user.js` : Tampermonkey, bloc `CONFIG` unique (appUrl + sélecteurs), panneau flottant, remplissage titre/description/prix via setter natif + events input/change, catégorie/champs manquants en copier-coller, télécharger zip, « Annonce publiée ✓ ». **Interdits respectés** : aucun `.click()`/`.submit()`/navigation, pas de localStorage, vanilla. `userscript/README.md` (install + maintenance sélecteurs 10 min). Vérifié (TestClient) : next/publiee/409/204, CORS accepté LBC / refusé autre origine, preflight ; JS `node --check` OK. **À vérifier par Wassim (navigateur réel)** : sélecteurs LBC réels + remplissage sur la vraie page de dépôt (sélecteurs actuels = placeholders à ajuster).
+
+- **T08 Fait** : déploiement. `deploy/com.brocantor.app.plist` (LaunchAgent, RunAtLoad+KeepAlive, chemins `__PLACEHOLDER__`, logs `deploy/logs/`). `deploy/install.sh` idempotent (venv 3.12+, pip, `.env` si absent, substitution plist, bootout/bootstrap launchd, kickstart, curl `/api/sante`, récap). `deploy/README.md` (prérequis, Tailscale MagicDNS+HTTPS+`tailscale serve`, test PWA 4G, sauvegarde Time Machine/rsync). Endpoint `GET /api/sante` (section `# T08` de `api.py`) → `{ok, produits:N, worker:actif|inactif}`. Vérifié : `bash -n` OK, plist généré `plutil -lint` OK (4 substitutions), `/api/sante` → 200 `{ok:true,produits:6,worker:actif}`. **NON exécuté cette nuit** (chargerait un vrai LaunchAgent + service persistant sur la machine) : `./deploy/install.sh` et les étapes Tailscale/reboot/PWA sont **à lancer par Wassim**.
 
 ## Chemin critique POC
 
