@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111417">
+  <title>{% block title %}{{ titre|default("Brocantor") }}{% endblock %} · Brocantor</title>
+  <link rel="manifest" href="/static/manifest.json"><!-- T02 : PWA -->
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <nav class="tabbar">
+    <a href="/depot" class="tab {% if onglet == 'depot' %}actif{% endif %}">
+      <span class="tab-ico">📷</span><span class="tab-lbl">Dépôt</span>
+    </a>
+    <a href="/produits" class="tab {% if onglet == 'produits' %}actif{% endif %}">
+      <span class="tab-ico">🗂️</span><span class="tab-lbl">Fiches</span>
+    </a>
+    <a href="/dashboard" class="tab {% if onglet == 'dashboard' %}actif{% endif %}">
+      <span class="tab-ico">📊</span><span class="tab-lbl">Dashboard</span>
+    </a>
+  </nav>
+</body>
+</html>
