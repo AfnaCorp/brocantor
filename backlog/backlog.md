@@ -31,6 +31,8 @@ Chaque ticket a son prompt agent dans `tickets/T0X-*.md`. L'ordre d'exécution e
 
 - **T08 Fait** : déploiement. `deploy/com.brocantor.app.plist` (LaunchAgent, RunAtLoad+KeepAlive, chemins `__PLACEHOLDER__`, logs `deploy/logs/`). `deploy/install.sh` idempotent (venv 3.12+, pip, `.env` si absent, substitution plist, bootout/bootstrap launchd, kickstart, curl `/api/sante`, récap). `deploy/README.md` (prérequis, Tailscale MagicDNS+HTTPS+`tailscale serve`, test PWA 4G, sauvegarde Time Machine/rsync). Endpoint `GET /api/sante` (section `# T08` de `api.py`) → `{ok, produits:N, worker:actif|inactif}`. Vérifié : `bash -n` OK, plist généré `plutil -lint` OK (4 substitutions), `/api/sante` → 200 `{ok:true,produits:6,worker:actif}`. **NON exécuté cette nuit** (chargerait un vrai LaunchAgent + service persistant sur la machine) : `./deploy/install.sh` et les étapes Tailscale/reboot/PWA sont **à lancer par Wassim**.
 
+- **Bilan nuit** : 8/8 tickets Fait, testés (Starlette TestClient + uvicorn réel), commités (1 commit/ticket). Intégration finale 19/19 verte, cycle complet dépôt→IA→valider→publier→vendu. Détails + points à vérifier par Wassim dans `RAPPORT-NUIT.md`. Env : venv `.venv` (Python 3.14). Lancement : `.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8377`.
+
 ## Chemin critique POC
 
 `T01 → T02 → T03 → T04` donne un POC de bout en bout (photographier → fiche IA → valider). T05/T06/T07/T08 transforment le POC en outil de déstockage complet.
