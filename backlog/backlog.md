@@ -5,7 +5,7 @@ Chaque ticket a son prompt agent dans `tickets/T0X-*.md`. L'ordre d'exécution e
 | ID | Titre | Dépend de | Parallélisable avec | Effort | Statut |
 |----|-------|-----------|---------------------|--------|--------|
 | T01 | Socle applicatif : FastAPI, SQLite, layout, routers vides, seed | — | rien (bloquant) | ½ j | Fait |
-| T02 | Dépôt mobile : PWA de capture photos + note | T01 | T04, T05 | 1 j | À faire |
+| T02 | Dépôt mobile : PWA de capture photos + note | T01 | T04, T05 | 1 j | Fait |
 | T03 | Worker d'analyse IA : file async, appel Claude vision, images LBC | T01, T02 | T06 | 1–1,5 j | À faire |
 | T04 | Fiches produits : liste, détail, édition, validation | T01 | T02, T05 | 1 j | À faire |
 | T05 | Dashboard de suivi : compteurs, filtres, actions d'état | T01 | T02, T04 | ½ j | À faire |
@@ -16,6 +16,8 @@ Chaque ticket a son prompt agent dans `tickets/T0X-*.md`. L'ordre d'exécution e
 ## Journal de nuit (2026-07-21)
 
 - **T01 Fait** : socle FastAPI + SQLite complet. App démarre (lifespan `init_db`), `/` → `/dashboard` (307), routes `/depot|/produits|/dashboard|/api/health` en 200, layout mobile + nav 3 onglets + HTMX vendorisé, seed 6 produits (tous états) idempotent, `changer_etat` refuse les transitions illégales. Env : venv Python 3.14 (`.venv/`), Starlette `TemplateResponse(request, name, ctx)` (nouvelle signature). Photos servies via `/photos`.
+
+- **T02 Fait** : dépôt mobile. `GET /depot` (formulaire capture + note), `POST /depot` multipart crée un produit à `depose`, photos nommées `photo_<pos>.jpg`, note en base. Compression canvas côté client (max 1600px, JPEG 0,85), upload XHR avec barre de progression + bouton Réessayer (sélection conservée), toast + compteur de session, reset sans rechargement. PWA : `manifest.json` (start_url `/depot`, standalone) + icônes 192/512 générées, lien déjà dans `base.html`. Pas de service worker (choix ticket). Vérifié serveur : POST 3 photos → produit `depose` + fichiers/positions OK, refus 0 photo et >5. **À vérifier par Wassim (téléphone réel)** : compression effective <800Ko, install PWA plein écran, <45s/objet, reprise après coupure réseau.
 
 ## Chemin critique POC
 

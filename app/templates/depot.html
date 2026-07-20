@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+/* Styles propres au dépôt (T02) — gardés hors de style.css (territoire T01). */
+.depot-head { display: flex; align-items: baseline; justify-content: space-between; }
+.compteur { color: var(--ok); font-weight: 700; font-size: 0.95rem; }
+.depot-form { display: flex; flex-direction: column; gap: 4px; }
+.zone-photos {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 28px 16px; margin: 4px 0 8px;
+  background: var(--surface); border: 2px dashed var(--border); border-radius: 16px;
+  cursor: pointer; text-align: center; color: var(--muted);
+}
+.zone-photos:active { background: var(--surface-2); }
+.zone-ico { font-size: 2rem; }
+.zone-txt { color: var(--text); font-weight: 700; font-size: 1.05rem; }
+.zone-sub { font-size: 0.8rem; }
+.vignettes { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.vignette { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--surface-2); }
+.vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vignette-pos {
+  position: absolute; left: 6px; bottom: 6px; min-width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.65); color: #fff; border-radius: 999px; font-size: .75rem; font-weight: 700;
+}
+.vignette-del {
+  position: absolute; top: 4px; right: 4px; width: 32px; height: 32px; min-height: 32px;
+  padding: 0; border-radius: 999px; background: rgba(0,0,0,.65); color: #fff;
+  border: none; font-size: 1.2rem; line-height: 1;
+}
+.btn-envoyer { margin-top: 12px; width: 100%; font-size: 1.1rem; }
+.btn-envoyer:disabled { opacity: .45; }
+.progress-wrap { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.progress-bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0; background: var(--accent); transition: width .15s ease; }
+.progress-txt { color: var(--muted); font-size: .85rem; text-align: center; }
+.echec { margin-top: 12px; padding: 12px; border: 1px solid var(--err); border-radius: 12px; color: #ffb3ad; }
+.echec p { margin: 0 0 10px; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 20px); transform: translateX(-50%);
+  background: var(--ok); color: var(--accent-ink); font-weight: 700;
+  padding: 12px 18px; border-radius: 999px; z-index: 100; opacity: 0; transition: opacity .3s ease;
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
+}
+.toast.show { opacity: 1; }
+</style>
+<header class="page-head depot-head">
+  <h1>Dépôt</h1>
+  <span class="compteur" id="compteur" hidden>0 envoyé</span>
+</header>
+
+<form id="depot-form" class="depot-form" autocomplete="off">
+  <label class="zone-photos" for="input-photos">
+    <span class="zone-ico">📷</span>
+    <span class="zone-txt">Ajouter des photos</span>
+    <span class="zone-sub">1 à 5 · l'ordre est conservé</span>
+    <input id="input-photos" type="file" accept="image/*" capture="environment"
+           multiple hidden>
+  </label>
+
+  <div id="vignettes" class="vignettes"></div>
+
+  <label for="note">Note (optionnelle)</label>
+  <textarea id="note" name="note" rows="3"
+    placeholder="Dictez : prix d'achat, défauts, marque/modèle, dimensions…"></textarea>
+
+  <button type="submit" id="btn-envoyer" class="btn btn-primary btn-envoyer" disabled>
+    Envoyer
+  </button>
+
+  <div id="progress-wrap" class="progress-wrap" hidden>
+    <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+    <span id="progress-txt" class="progress-txt">Envoi…</span>
+  </div>
+
+  <div id="echec" class="echec" hidden>
+    <p id="echec-msg">Échec de l'envoi.</p>
+    <button type="button" id="btn-reessayer" class="btn btn-danger">Réessayer</button>
+  </div>
+</form>
+
+<div id="toast" class="toast" hidden></div>
+<script src="/static/depot.js" defer></script>
+{% endblock %}
