@@ -28,9 +28,9 @@
     <div class="carte-txt">
       <div class="carte-titre">{{ p.titre or "En cours d'analyse…" }}</div>
       <div class="carte-prix">
-        {% if p.prix_choisi is not none %}{{ p.prix_choisi }} €
-        {% elif p.prix_min_estime is not none %}{{ p.prix_min_estime }}–{{ p.prix_max_estime }} €
-        {% else %}<span class="vide">prix à estimer</span>{% endif %}
+        {% if p.prix_choisi is not none %}<span class="tag-prix">{{ p.prix_choisi }} €</span>
+        {% elif p.prix_min_estime is not none %}<span class="tag-prix">{{ p.prix_min_estime }}–{{ p.prix_max_estime }} €</span>
+        {% else %}<span class="tag-prix"><span class="tag-prix-vide">à estimer</span></span>{% endif %}
       </div>
     </div>
   </a>

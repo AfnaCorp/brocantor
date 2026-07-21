@@ -1,4 +1,5 @@
-/* Fiches produits (T04) — liste + détail. */
+/* Fiches produits (T04) — liste + détail. Utilise les tokens/patterns de style.css
+   (badges = tampons, .tag-prix = étiquette de prix signature). */
 
 /* --- Filtres (puces) --- */
 .puces { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; -webkit-overflow-scrolling: touch; }
@@ -12,16 +13,16 @@
 
 /* --- Grille de cartes --- */
 .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-.carte { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+.carte { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
   overflow: hidden; text-decoration: none; color: var(--text); display: flex; flex-direction: column; }
 .carte-img { position: relative; aspect-ratio: 4/3; background: var(--surface-2); }
 .carte-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .carte-noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
 .carte-img .badge { position: absolute; top: 6px; left: 6px; }
-.carte-txt { padding: 10px 12px; }
-.carte-titre { font-weight: 600; font-size: .95rem; line-height: 1.25; margin-bottom: 4px;
+.carte-txt { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.carte-titre { font-family: var(--font-body); font-weight: 600; font-size: .95rem; line-height: 1.25;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.carte-prix { color: var(--accent); font-weight: 700; }
+.carte-prix { align-self: flex-start; }
 .vide-liste, .vide { color: var(--muted); }
 .vide-liste { text-align: center; padding: 32px; }
 
@@ -29,21 +30,20 @@
 .detail-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .retour { text-decoration: none; font-weight: 600; }
 .carrousel { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
-  border-radius: 14px; -webkit-overflow-scrolling: touch; }
+  border-radius: 12px; -webkit-overflow-scrolling: touch; }
 .carrousel img { flex: 0 0 auto; width: 85%; max-width: 420px; aspect-ratio: 4/3;
-  object-fit: cover; border-radius: 14px; scroll-snap-align: center; background: var(--surface-2); }
+  object-fit: cover; border-radius: 12px; scroll-snap-align: center; background: var(--surface-2); }
 .vide-photos { padding: 40px; justify-content: center; align-items: center; color: var(--muted); background: var(--surface); }
 
 .preview { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
 
 /* Champ éditable (show + edit) */
 .champ { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
 .champ-corps { flex: 1; min-width: 0; }
-.champ-lbl { display: block; color: var(--muted); font-size: .75rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
-.champ-val strong { font-size: 1.1rem; }
-.champ-val .prix { color: var(--accent); font-size: 1.3rem; }
+.champ-lbl { display: block; color: var(--muted); font-family: var(--font-mono); font-size: .68rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+.champ-val strong { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; }
 .champ-val .multi { margin: 0; white-space: pre-wrap; }
 .crayon { flex: 0 0 auto; width: 44px; height: 44px; min-height: 44px; padding: 0;
   background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; font-size: 1.1rem; }
@@ -51,34 +51,38 @@
 .champ-actions { display: flex; gap: 8px; margin-top: 10px; }
 .champ-actions .btn { flex: 1; }
 
-/* Bloc prix */
-.bloc-prix { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-  padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
-.fourchette { color: var(--text); }
-.confiance { margin-left: 8px; font-size: .8rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
-.conf-haute { color: #7ee787; border-color: var(--ok); }
-.conf-moyenne { color: #f0c674; border-color: var(--warn); }
-.conf-basse { color: #ffb3ad; border-color: var(--err); }
+/* Bloc prix — l'estimation IA reste en texte simple ; le prix choisi
+   (celui qui compte réellement) porte l'étiquette signature .tag-prix. */
+.bloc-prix { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.fourchette { color: var(--text); font-size: .92rem; }
+.fourchette strong { font-family: var(--font-mono); color: var(--muted); }
+.confiance { margin-left: 6px; font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase;
+  letter-spacing: .05em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
+.conf-haute { color: #9BC084; border-color: var(--ok); }
+.conf-moyenne { color: #E8C878; border-color: var(--warn); }
+.conf-basse { color: #E4977E; border-color: var(--err); }
 .bloc-prix .champ { border: none; padding: 0; background: transparent; }
 .btn-compar { background: var(--surface-2); }
 
 /* Contexte IA & historique repliables */
-.contexte-ia, .historique { margin-top: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
-.contexte-ia > summary, .historique > summary { padding: 14px; font-weight: 700; cursor: pointer; min-height: 48px; display: flex; align-items: center; }
+.contexte-ia, .historique { margin-top: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.contexte-ia > summary, .historique > summary { padding: 14px; font-weight: 600; cursor: pointer; min-height: 48px; display: flex; align-items: center; }
 .contexte-corps { padding: 0 14px 14px; }
 .ctx-bloc { margin-bottom: 12px; }
-.ctx-bloc h4 { margin: 8px 0 4px; font-size: .85rem; color: var(--muted); }
+.ctx-bloc h4 { margin: 8px 0 4px; font-family: var(--font-mono); font-size: .78rem; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--muted); font-weight: 600; }
 .ctx-bloc ul { margin: 0; padding-left: 20px; }
-.ctx-bloc.err { color: #ffb3ad; }
+.ctx-bloc.err { color: var(--err); }
 
 .actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
 .actions .btn { flex: 1; min-width: 140px; }
 .btn-valider { font-size: 1.1rem; }
 .msg-action { margin-top: 10px; }
-.msg-err { color: #ffb3ad; background: rgba(248,81,73,.1); border: 1px solid var(--err);
+.msg-err { color: var(--err); background: rgba(201,115,85,.1); border: 1px solid var(--err);
   border-radius: 10px; padding: 10px 12px; font-weight: 600; }
 
 .notes-libres { margin-top: 16px; }
 .evenements { list-style: none; margin: 0; padding: 0 14px 14px; }
 .evenements li { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: .9rem; }
-.ev-date { color: var(--muted); margin-right: 6px; font-variant-numeric: tabular-nums; }
+.ev-date { color: var(--muted); margin-right: 6px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }

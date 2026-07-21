@@ -1,16 +1,31 @@
-/* Brocantor — CSS maison minimal, thème sombre, mobile-first, gros tactiles. */
+/* Brocantor — direction artistique "ferronnerie de brocante" :
+   fond sombre chaud, laiton vieilli, verdigris, tampon encré sur étiquette.
+   Thème sombre unique (usage nocturne/PWA), mobile-first, gros tactiles. */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
 :root {
-  --bg: #111417;
-  --surface: #1b1f24;
-  --surface-2: #242a31;
-  --text: #e8ebed;
-  --muted: #9aa4ad;
-  --accent: #4c9aff;
-  --accent-ink: #06152b;
-  --border: #2e353d;
-  --ok: #3fb950;
-  --warn: #d29922;
-  --err: #f85149;
+  /* Encre & papier */
+  --bg: #17140F;
+  --surface: #221D15;
+  --surface-2: #2C2419;
+  --text: #EDE6D6;
+  --muted: #9C9280;
+  --border: #3A3122;
+
+  /* Laiton (accent primaire — remplace le bleu générique) */
+  --accent: #C9903F;
+  --accent-ink: #241705;
+
+  /* États : verdigris (succès/vendu), ambre (attention), terre cuite (erreur) */
+  --ok: #7A9A66;
+  --warn: #D6A23C;
+  --err: #C97355;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
   --tabbar-h: 64px;
   --touch: 48px;
 }
@@ -20,9 +35,11 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(201,144,63,.05), transparent 60%),
+    var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
   font-size: 17px;
   line-height: 1.45;
   -webkit-text-size-adjust: 100%;
@@ -34,9 +51,22 @@ html, body {
   margin: 0 auto;
 }
 
+/* En-tête de page — traitement "talon de billet" : titre en display serif,
+   liséré pointillé façon perforation en dessous. */
+.page-head { margin: 4px 0 20px; }
 .page-head h1 {
-  font-size: 1.5rem;
-  margin: 8px 0 16px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.7rem;
+  letter-spacing: -.01em;
+  margin: 8px 0 12px;
+  color: var(--text);
+}
+.page-head::after {
+  content: "";
+  display: block;
+  height: 0;
+  border-bottom: 2px dashed var(--border);
 }
 
 a { color: var(--accent); }
@@ -50,9 +80,10 @@ a { color: var(--accent); }
   min-height: var(--touch);
   padding: 12px 18px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface-2);
   color: var(--text);
+  font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
@@ -64,44 +95,89 @@ a { color: var(--accent); }
   border-color: var(--accent);
 }
 .btn-danger { background: transparent; color: var(--err); border-color: var(--err); }
-.btn:active, button:active { filter: brightness(1.1); }
+.btn:active, button:active { filter: brightness(1.12); }
+.btn:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible,
+select:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 /* Cartes / surfaces */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 16px;
 }
 
 .placeholder {
   background: var(--surface);
   border: 1px dashed var(--border);
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 32px 20px;
   text-align: center;
   color: var(--muted);
 }
 
-/* Badges d'état */
+/* Badges d'état — traités comme un tampon encré : mono, capitales, tracking.
+   "vendue" est le tampon signature : contour, pivoté, comme réellement encré. */
 .badge {
   display: inline-block;
-  padding: 3px 10px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--muted);
 }
-.badge.etat-depose        { color: #cdd3d9; }
-.badge.etat-en_traitement { color: #79c0ff; border-color: #1f6feb; }
-.badge.etat-a_valider     { color: #f0c674; border-color: var(--warn); }
-.badge.etat-prete         { color: #7ee787; border-color: var(--ok); }
-.badge.etat-publiee       { color: #4c9aff; border-color: var(--accent); }
-.badge.etat-vendue        { color: #06152b; background: var(--ok); border-color: var(--ok); }
-.badge.etat-erreur        { color: #ffb3ad; border-color: var(--err); }
+.badge.etat-depose        { color: #C9BEA6; }
+.badge.etat-en_traitement { color: #8FB0D1; border-color: #4C7BA6; }
+.badge.etat-a_valider     { color: #E8C878; border-color: var(--warn); }
+.badge.etat-prete         { color: #9BC084; border-color: var(--ok); }
+.badge.etat-publiee       { color: #E0AE64; border-color: var(--accent); }
+.badge.etat-erreur        { color: #E4977E; border-color: var(--err); }
 .badge.etat-abandonnee    { color: var(--muted); text-decoration: line-through; }
+.badge.etat-vendue {
+  color: var(--ok);
+  background: transparent;
+  border: 1.5px solid var(--ok);
+  transform: rotate(-3deg);
+  font-weight: 700;
+}
+
+/* Étiquette de prix — signature visuelle : forme de ticket avec encoche
+   (trou de perforation), inspirée des étiquettes de brocante. Réservée aux
+   moments "prix héros" (fiche détail, carte produit, tuiles du dashboard) —
+   ailleurs (listes denses), un simple prix en mono suffit. */
+.tag-prix {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 4px 14px 4px 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: 3px 10px 10px 3px;
+  transform: rotate(-1.5deg);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--accent);
+}
+.tag-prix::before {
+  content: "";
+  position: absolute;
+  left: 7px; top: 50%;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  transform: translateY(-50%);
+}
+.tag-prix .tag-prix-vide { color: var(--muted); font-weight: 500; font-style: italic; }
 
 /* Barre d'onglets basse fixe */
 .tabbar {
@@ -138,8 +214,13 @@ input, textarea, select {
   background: var(--surface-2);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
+  font-family: var(--font-body);
   font-size: 1rem; /* ≥16px : évite le zoom auto iOS */
 }
 textarea { min-height: 96px; resize: vertical; }
 label { display: block; margin: 12px 0 6px; color: var(--muted); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

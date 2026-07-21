@@ -33,7 +33,7 @@
     <span class="champ-lbl">{{ meta.label }}</span>
     <div class="champ-val">
       {% if champ == 'prix_choisi' %}
-        {% if valeur is not none %}<strong class="prix">{{ valeur }} €</strong>
+        {% if valeur is not none %}<span class="tag-prix">{{ valeur }} €</span>
         {% else %}<span class="vide">— non fixé{% if suggestion_prix %} (suggéré {{ suggestion_prix }} €){% endif %}</span>{% endif %}
       {% elif champ == 'titre' %}
         {% if valeur %}<strong>{{ valeur }}</strong>{% else %}<span class="vide">En cours d'analyse…</span>{% endif %}
