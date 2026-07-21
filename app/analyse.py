@@ -23,7 +23,7 @@ from .categories_lbc import CATEGORIES, valider_categorie
 
 logger = logging.getLogger("brocantor.analyse")
 
-DEFAUT_MODELE = "claude-sonnet-4-5"
+DEFAUT_MODELE = "claude-sonnet-5"
 MAX_TOKENS = 1024
 BACKOFFS = (2, 8, 30)  # secondes entre les 3 tentatives
 
