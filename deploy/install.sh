@@ -37,18 +37,27 @@ raise SystemExit(0 if sys.version_info[:2] >= (3, 12) else 1)
 PY
 
 # --- Venv + dépendances ------------------------------------------------------
-if [ ! -x "$VENV_PYTHON" ]; then
-  echo "▶ Création du venv…"
-  "$PYTHON_BIN" -m venv "$VENV_DIR"
+# uv est le mode nominal : il crée le venv ET installe aux versions figées dans
+# uv.lock. Repli sur pip + requirements.txt (export du lock) si uv est absent,
+# pour que le déploiement ne casse pas sur une machine sans uv.
+if command -v uv >/dev/null 2>&1; then
+  echo "▶ Dépendances (uv sync, versions figées par uv.lock)…"
+  (cd "$PROJECT_DIR" && uv sync --quiet)
+else
+  echo "▶ uv absent — repli sur pip + requirements.txt."
+  echo "  (Installer uv rendrait le déploiement reproductible : brew install uv)"
+  if [ ! -x "$VENV_PYTHON" ]; then
+    echo "▶ Création du venv…"
+    "$PYTHON_BIN" -m venv "$VENV_DIR"
+  fi
+  "$VENV_PYTHON" -m pip install --quiet --upgrade pip
+  "$VENV_PYTHON" -m pip install --quiet -r "$PROJECT_DIR/requirements.txt"
 fi
-echo "▶ Dépendances (pip install)…"
-"$VENV_PYTHON" -m pip install --quiet --upgrade pip
-"$VENV_PYTHON" -m pip install --quiet -r "$PROJECT_DIR/requirements.txt"
 
 # --- .env --------------------------------------------------------------------
 if [ ! -f "$PROJECT_DIR/.env" ]; then
   cp "$PROJECT_DIR/.env.example" "$PROJECT_DIR/.env"
-  echo "▶ .env créé depuis .env.example — PENSE À RENSEIGNER ANTHROPIC_API_KEY."
+  echo "▶ .env créé depuis .env.example — PENSE À RENSEIGNER LA CLÉ DU PROVIDER VISÉ PAR AI_MODEL."
 else
   echo "▶ .env déjà présent (inchangé)."
 fi

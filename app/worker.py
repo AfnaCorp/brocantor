@@ -158,8 +158,9 @@ async def start() -> None:
         logger.info("worker: %d produit(s) repris de en_traitement → depose", n)
     if not analyse.cle_disponible():
         logger.warning(
-            "worker: ANTHROPIC_API_KEY absente et BROCANTOR_FAKE_AI non défini — "
-            "les produits déposés resteront en 'depose' (pas d'analyse)."
+            "worker: %s absente et BROCANTOR_FAKE_AI non défini — "
+            "les produits déposés resteront en 'depose' (pas d'analyse).",
+            analyse._cle_attendue(),
         )
     _stop = asyncio.Event()
     _task = asyncio.create_task(_boucle())

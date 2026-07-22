@@ -62,13 +62,18 @@ brocantor/
 - **Backlog** : quand un ticket est terminé, mettre à jour son statut dans `backlog/backlog.md` (À faire → En cours → Fait) avec une ligne de commentaire.
 - **Secrets** : `ANTHROPIC_API_KEY` dans `.env` (jamais commité). `.env.example` à jour.
 - **Tests** : POC — pas de suite de tests exigée ; en revanche chaque ticket a des critères d'acceptation manuels à vérifier réellement avant de se déclarer Fait.
-- **Dépendances** : `requirements.txt` figé ; ajouter une dépendance = la justifier dans le commit.
+- **Dépendances** : gérées par **uv** (`pyproject.toml` + `uv.lock` figé) ; ajouter une dépendance = `uv add <paquet>` et la justifier dans le commit.
 
 ## Commandes
 
 ```bash
-pip install -r requirements.txt   # installer
-cp .env.example .env              # puis renseigner ANTHROPIC_API_KEY
-uvicorn app.main:app --host 0.0.0.0 --port 8377 --reload   # dev
-python -m app.seed                # données de démo (produits factices)
+uv sync                           # installer (crée .venv/ aux versions de uv.lock)
+cp .env.example .env              # puis renseigner la clé du provider visé par AI_MODEL
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8377 --reload   # dev
+uv run python -m app.seed         # ⚠️ données de démo — EFFACE les données existantes
 ```
+
+Gestion des dépendances : **uv**. `uv add <paquet>` pour en ajouter une (met à
+jour `pyproject.toml` + `uv.lock`), `uv sync` pour réaligner le venv sur le lock.
+Ne pas éditer `uv.lock` à la main. `requirements.txt` est conservé en export de
+compatibilité — le régénérer avec `uv export` après tout changement.

@@ -1,10 +1,14 @@
 """Appel IA d'analyse produit (T03).
 
-Un appel Claude vision par produit, sortie JSON forcée via tool-use. La note
-utilisateur prime sur les suppositions visuelles. Retry ×3 avec backoff.
+Un appel vision par produit via LiteLLM, sortie JSON forcée par json_schema. La
+note utilisateur prime sur les suppositions visuelles. Retry ×3 avec backoff.
+
+LiteLLM route vers le provider selon le préfixe du modèle (`AI_MODEL` dans
+.env) : `openai/gpt-5`, `anthropic/claude-sonnet-5`… Changer de provider = une
+variable d'environnement, pas une ligne de code.
 
 Modes :
-  - Clé `ANTHROPIC_API_KEY` présente → appel réel.
+  - Clé du provider visé présente → appel réel.
   - Variable `BROCANTOR_FAKE_AI` vraie → fiche factice déterministe, AUCUN appel
     réseau (permet de tester tout le pipeline sans clé).
   - Ni l'un ni l'autre → `PasDeCleAPI` (le worker laisse le produit en `depose`).
@@ -23,52 +27,68 @@ from .categories_lbc import CATEGORIES, valider_categorie
 
 logger = logging.getLogger("brocantor.analyse")
 
-DEFAUT_MODELE = "claude-sonnet-5"
-MAX_TOKENS = 1024
+DEFAUT_MODELE = "openai/gpt-5"
+# Sur les modèles à raisonnement (GPT-5…), ce budget couvre AUSSI les tokens de
+# réflexion internes, pas seulement la réponse visible : à 1024 le raisonnement
+# consommait tout et la fiche revenait vide (finish_reason=length).
+MAX_TOKENS = 4096
 BACKOFFS = (2, 8, 30)  # secondes entre les 3 tentatives
 
-NOM_OUTIL = "fiche_produit"
+NOM_SCHEMA = "fiche_produit"
 
-SCHEMA_OUTIL = {
-    "name": NOM_OUTIL,
-    "description": "Fiche produit structurée pour une annonce Leboncoin d'occasion.",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "titre": {"type": "string", "description": "≤ 50 caractères, style annonce Leboncoin"},
-            "description": {
-                "type": "string",
-                "description": "3 à 6 phrases honnêtes : ce que c'est, état, défauts visibles, dimensions estimées si pertinent",
-            },
-            "categorie_lbc": {
-                "type": "string",
-                "enum": CATEGORIES,
-                "description": "Un libellé EXACT de la liste fournie",
-            },
-            "prix_min": {"type": "integer", "minimum": 0},
-            "prix_max": {"type": "integer", "minimum": 0},
-            "confiance": {"type": "string", "enum": ["haute", "moyenne", "basse"]},
-            "hypotheses": {"type": "array", "items": {"type": "string"}},
-            "questions": {"type": "array", "items": {"type": "string"}},
+# Clé d'API attendue par provider. Sert uniquement à détecter si une analyse
+# réelle est possible ; LiteLLM lit lui-même la variable au moment de l'appel.
+CLES_PROVIDER = {
+    "openai": "OPENAI_API_KEY",
+    "anthropic": "ANTHROPIC_API_KEY",
+    "gemini": "GEMINI_API_KEY",
+    "mistral": "MISTRAL_API_KEY",
+}
+
+# `strict: True` exige additionalProperties=False et TOUS les champs dans
+# required — sinon OpenAI rejette le schéma.
+SCHEMA_FICHE = {
+    "type": "object",
+    "properties": {
+        "titre": {"type": "string", "description": "≤ 50 caractères, style annonce Leboncoin"},
+        "description": {
+            "type": "string",
+            "description": "3 à 6 phrases honnêtes : ce que c'est, état, défauts visibles, dimensions estimées si pertinent",
         },
-        "required": [
-            "titre",
-            "description",
-            "categorie_lbc",
-            "prix_min",
-            "prix_max",
-            "confiance",
-            "hypotheses",
-            "questions",
-        ],
+        "categorie_lbc": {
+            "type": "string",
+            "enum": CATEGORIES,
+            "description": "Un libellé EXACT de la liste fournie",
+        },
+        "prix_min": {"type": "integer"},
+        "prix_max": {"type": "integer"},
+        "confiance": {"type": "string", "enum": ["haute", "moyenne", "basse"]},
+        "hypotheses": {"type": "array", "items": {"type": "string"}},
+        "questions": {"type": "array", "items": {"type": "string"}},
     },
+    "required": [
+        "titre",
+        "description",
+        "categorie_lbc",
+        "prix_min",
+        "prix_max",
+        "confiance",
+        "hypotheses",
+        "questions",
+    ],
+    "additionalProperties": False,
+}
+
+FORMAT_REPONSE = {
+    "type": "json_schema",
+    "json_schema": {"name": NOM_SCHEMA, "schema": SCHEMA_FICHE, "strict": True},
 }
 
 SYSTEME = (
     "Tu es un expert de la vente d'occasion entre particuliers en France "
     "(Leboncoin). À partir de photos d'un objet et d'une note optionnelle du "
-    "vendeur, tu produis une fiche d'annonce prête à publier via l'outil "
-    f"`{NOM_OUTIL}`.\n\n"
+    "vendeur, tu produis une fiche d'annonce prête à publier, au format JSON "
+    "imposé.\n\n"
     "Règles :\n"
     "- Sois HONNÊTE sur les défauts visibles : ça évite les litiges et rassure "
     "l'acheteur. Pas de superlatifs creux.\n"
@@ -93,10 +113,20 @@ class AnalyseInvalide(RuntimeError):
     """Réponse IA absente ou non conforme au schéma."""
 
 
+def _modele() -> str:
+    return os.getenv("AI_MODEL", DEFAUT_MODELE)
+
+
+def _cle_attendue() -> str:
+    """Nom de la variable d'env attendue pour le provider du modèle courant."""
+    provider = _modele().split("/", 1)[0] if "/" in _modele() else "openai"
+    return CLES_PROVIDER.get(provider, f"{provider.upper()}_API_KEY")
+
+
 def _mode() -> str:
     if os.getenv("BROCANTOR_FAKE_AI"):
         return "fake"
-    if os.getenv("ANTHROPIC_API_KEY"):
+    if os.getenv(_cle_attendue()):
         return "reel"
     return "aucun"
 
@@ -133,53 +163,53 @@ def _fiche_factice(note: str | None) -> dict:
 
 
 def _bloc_image(chemin_lbc_rel: str) -> dict:
+    """Format OpenAI (data-URI). LiteLLM le retraduit pour les autres providers."""
     data = (db.DATA_DIR / chemin_lbc_rel).read_bytes()
-    return {
-        "type": "image",
-        "source": {
-            "type": "base64",
-            "media_type": "image/jpeg",
-            "data": base64.standard_b64encode(data).decode("ascii"),
-        },
-    }
+    b64 = base64.standard_b64encode(data).decode("ascii")
+    return {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}}
 
 
 def _appel_reel(note: str | None, chemins_lbc: list[str]) -> dict:
-    from anthropic import Anthropic  # import tardif : évite la dépendance au boot
+    from litellm import completion  # import tardif : évite la dépendance au boot
 
-    client = Anthropic()  # lit ANTHROPIC_API_KEY dans l'environnement
-    modele = os.getenv("CLAUDE_MODEL", DEFAUT_MODELE)
+    modele = _modele()
 
-    contenu: list[dict] = [_bloc_image(c) for c in chemins_lbc]
     texte = "Note du vendeur : " + (note.strip() if note else "(aucune)")
     texte += (
-        "\n\nAnalyse ces photos et remplis la fiche via l'outil "
-        f"`{NOM_OUTIL}`. Catégories autorisées : " + ", ".join(CATEGORIES) + "."
+        "\n\nAnalyse ces photos et produis la fiche au format JSON imposé. "
+        "Catégories autorisées : " + ", ".join(CATEGORIES) + "."
     )
+    contenu: list[dict] = [_bloc_image(c) for c in chemins_lbc]
     contenu.append({"type": "text", "text": texte})
+
+    messages = [
+        {"role": "system", "content": SYSTEME},
+        {"role": "user", "content": contenu},
+    ]
 
     derniere_err: Exception | None = None
     for tentative, pause in enumerate(BACKOFFS, start=1):
         try:
-            reponse = client.messages.create(
+            reponse = completion(
                 model=modele,
+                messages=messages,
                 max_tokens=MAX_TOKENS,
-                system=SYSTEME,
-                tools=[SCHEMA_OUTIL],
-                tool_choice={"type": "tool", "name": NOM_OUTIL},
-                messages=[{"role": "user", "content": contenu}],
+                response_format=FORMAT_REPONSE,
             )
-            for bloc in reponse.content:
-                if getattr(bloc, "type", None) == "tool_use" and bloc.name == NOM_OUTIL:
-                    usage = getattr(reponse, "usage", None)
-                    logger.info(
-                        "analyse OK (modèle=%s, in=%s, out=%s)",
-                        modele,
-                        getattr(usage, "input_tokens", "?"),
-                        getattr(usage, "output_tokens", "?"),
-                    )
-                    return dict(bloc.input)
-            raise AnalyseInvalide("Aucun bloc tool_use dans la réponse.")
+            brut = reponse.choices[0].message.content
+            if not brut:
+                raise AnalyseInvalide("Réponse vide du modèle.")
+            usage = getattr(reponse, "usage", None)
+            logger.info(
+                "analyse OK (modèle=%s, in=%s, out=%s)",
+                modele,
+                getattr(usage, "prompt_tokens", "?"),
+                getattr(usage, "completion_tokens", "?"),
+            )
+            try:
+                return json.loads(brut)
+            except json.JSONDecodeError as exc:
+                raise AnalyseInvalide(f"Réponse non-JSON : {exc}") from exc
         except AnalyseInvalide:
             raise  # réponse non conforme : ne pas réessayer aveuglément
         except Exception as exc:  # erreurs API/réseau : retry avec backoff
@@ -232,7 +262,7 @@ def analyser(note: str | None, chemins_lbc: list[str]) -> dict:
     """
     mode = _mode()
     if mode == "aucun":
-        raise PasDeCleAPI("ANTHROPIC_API_KEY absente (et pas de mode factice).")
+        raise PasDeCleAPI(f"{_cle_attendue()} absente (et pas de mode factice).")
     if not chemins_lbc:
         raise AnalyseInvalide("Aucune image LBC à analyser.")
     brut = _fiche_factice(note) if mode == "fake" else _appel_reel(note, chemins_lbc)

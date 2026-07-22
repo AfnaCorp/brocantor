@@ -17,13 +17,13 @@ c_ok=$'\033[0;32m'; c_warn=$'\033[0;33m'; c_err=$'\033[0;31m'; c_dim=$'\033[2m';
 
 if [ ! -x "$VENV_UVICORN" ]; then
   echo "${c_err}✗ Environnement virtuel introuvable (.venv/).${c_reset}"
-  echo "  Crée-le d'abord : python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt"
+  echo "  Crée-le d'abord : uv sync   (installe .venv/ aux versions figées dans uv.lock)"
   exit 1
 fi
 
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
   cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
-  echo "${c_warn}⚠ .env créé depuis .env.example — pense à y coller ta clé ANTHROPIC_API_KEY.${c_reset}"
+  echo "${c_warn}⚠ .env créé depuis .env.example — pense à y coller la clé du provider visé par AI_MODEL.${c_reset}"
 fi
 
 # Charge .env (juste pour lire PORT / la présence de la clé, sans écraser un export existant du shell).
@@ -34,11 +34,18 @@ set +a
 
 PORT="${PORT:-8377}"
 
-if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
-  MODE="réel (clé API détectée)"
+# Le provider est décidé par le préfixe de AI_MODEL ("openai/gpt-5" → OPENAI).
+# On vérifie la clé de CE provider : une clé Anthropic ne sert à rien si
+# AI_MODEL pointe vers OpenAI.
+AI_MODEL="${AI_MODEL:-openai/gpt-5}"
+PROVIDER="${AI_MODEL%%/*}"
+CLE_ATTENDUE="$(printf '%s_API_KEY' "$PROVIDER" | tr '[:lower:]' '[:upper:]')"
+
+if [ -n "$(eval "printf '%s' \"\${$CLE_ATTENDUE:-}\"")" ]; then
+  MODE="réel ($AI_MODEL, $CLE_ATTENDUE détectée)"
 else
   export BROCANTOR_FAKE_AI=1
-  MODE="${c_warn}factice — BROCANTOR_FAKE_AI=1 (aucune clé ANTHROPIC_API_KEY dans .env)${c_reset}"
+  MODE="${c_warn}factice — BROCANTOR_FAKE_AI=1 (aucune $CLE_ATTENDUE dans .env pour AI_MODEL=$AI_MODEL)${c_reset}"
 fi
 
 # Idempotent : coupe une instance déjà lancée sur ce port.
